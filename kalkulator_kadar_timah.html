@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kalkulator Kadar Timah & Mixture - mL → kg/gram</title>
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --accent:#0b5ed7;
+      --muted:#6b7280;
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    body{
+      margin:0;
+      background: linear-gradient(180deg,var(--bg),#eef3fb);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:24px;
+      display:flex;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width:920px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:0 6px 20px rgba(16,24,40,0.08);
+      padding:20px;
+      margin-bottom:16px;
+    }
+    h1{margin:0 0 6px 0; font-size:20px}
+    p.lead{margin:0 0 12px 0; color:var(--muted)}
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
+    input[type="number"], input[type="text"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #e6eef8;
+      box-sizing:border-box;
+      font-size:14px;
+      background:#fbfdff;
+    }
+    .col{flex:1 1 200px; min-width:180px}
+    .controls{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+    button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      background:var(--accent);
+      color:white;
+      font-weight:600;
+    }
+    button.secondary{
+      background:#e6eef8;
+      color:#0b254b;
+    }
+    .result{
+      padding:12px;
+      border-radius:10px;
+      background:linear-gradient(180deg,#fbfdff,#f7fbff);
+      margin-top:12px;
+      font-size:14px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+      gap:12px;
+      margin-top:8px;
+    }
+    .small{font-size:13px; color:var(--muted)}
+    .danger{color:#b91c1c; font-weight:600}
+    footer.small{font-size:12px; color:var(--muted); margin-top:10px}
+    @media (max-width:520px){
+      h1{font-size:18px}
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="card">
+      <h1>Kalkulator Kadar Timah & Mixture</h1>
+      <p class="lead">Masukkan volume (mL) dan persentase mineral. Asumsi <strong>densitas campuran = 1.6 g/mL</strong>.</p>
+
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <label style="margin:0">
+          <input type="radio" name="mode" id="mode_single" checked> <strong>Single</strong> (hanya Timah)
+        </label>
+        <label style="margin:0">
+          <input type="radio" name="mode" id="mode_mixture"> <strong>Mixture</strong> (hitung semua mineral)
+        </label>
+      </div>
+
+      <div style="margin-top:12px;" class="row">
+        <div class="col">
+          <label for="volume_ml">Volume (mL)</label>
+          <input id="volume_ml" type="number" min="0" step="any" value="500">
+        </div>
+        <div class="col" id="single_kadar_wrap">
+          <label for="kadar_sn">Kadar Timah (Sn) dalam %</label>
+          <input id="kadar_sn" type="number" min="0" max="100" step="any" value="0.4">
+        </div>
+      </div>
+
+      <!-- Mixture inputs -->
+      <div id="mixture_inputs" style="display:none; margin-top:12px;" class="card">
+        <h3 style="margin:0 0 8px 0;">Persentase Mixture (masing-masing dalam %)</h3>
+        <p class="small">Jika Anda menggunakan mode mixture, masukkan persentase untuk setiap mineral. Total % idealnya = 100% (atau kurang jika ada voids). Jika total ≠ 100%, sistem akan memberi peringatan tetapi masih menghitung berdasarkan nilai yang dimasukkan.</p>
+        <div class="grid">
+          <div>
+            <label for="pct_sn">Timah (Sn) %</label>
+            <input id="pct_sn" type="number" min="0" step="any" value="0.4">
+          </div>
+          <div>
+            <label for="pct_monazite">Monazite %</label>
+            <input id="pct_monazite" type="number" min="0" step="any" value="1">
+          </div>
+          <div>
+            <label for="pct_ilmenite">Ilmenite %</label>
+            <input id="pct_ilmenite" type="number" min="0" step="any" value="0.1">
+          </div>
+          <div>
+            <label for="pct_zircon">Zircon %</label>
+            <input id="pct_zircon" type="number" min="0" step="any" value="2">
+          </div>
+          <div>
+            <label for="pct_rutile">Rutile %</label>
+            <input id="pct_rutile" type="number" min="0" step="any" value="5">
+          </div>
+          <div>
+            <label for="pct_rre">RRE lain %</label>
+            <input id="pct_rre" type="number" min="0" step="any" value="0.0">
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <label class="small">Total % (diisi otomatis)</label>
+          <div id="total_pct" class="small">0%</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="hitung">Hitung</button>
+        <button id="reset" class="secondary">Reset</button>
+        <button id="download" class="secondary">Download HTML</button>
+      </div>
+
+      <div id="error" class="result" style="display:none"></div>
+
+      <div id="hasil" class="result" style="display:none">
+        <div id="summary" class="small"></div>
+
+        <div id="output_grid" class="grid" style="margin-top:8px"></div>
+
+        <div style="margin-top:10px" class="small">
+          <strong>Asumsi:</strong> densitas campuran ≈ <strong>1.6 g/mL</strong> (= 1600 kg/m³). Anda dapat mengubah densitas pada kode jika ingin nilai lain.
+        </div>
+      </div>
+
+      <footer class="small">Dibuat untuk penggunaan sederhana — bukan pengganti analisis laboratorium.</footer>
+    </div>
+  </main>
+
+  <script>
+    // Constants
+    const DENSITAS_G_PER_ML = 1.6; // g/mL
+
+    // Elements
+    const modeSingle = document.getElementById('mode_single');
+    const modeMixture = document.getElementById('mode_mixture');
+    const mixtureWrap = document.getElementById('mixture_inputs');
+    const singleKadarWrap = document.getElementById('single_kadar_wrap');
+
+    const volumeInput = document.getElementById('volume_ml');
+    const kadarSnInput = document.getElementById('kadar_sn');
+
+    const pctSn = document.getElementById('pct_sn');
+    const pctMon = document.getElementById('pct_monazite');
+    const pctIlm = document.getElementById('pct_ilmenite');
+    const pctZir = document.getElementById('pct_zircon');
+    const pctRut = document.getElementById('pct_rutile');
+    const pctRre = document.getElementById('pct_rre');
+    const totalPctDisplay = document.getElementById('total_pct');
+
+    const hitungBtn = document.getElementById('hitung');
+    const resetBtn = document.getElementById('reset');
+    const downloadBtn = document.getElementById('download');
+
+    const hasilDiv = document.getElementById('hasil');
+    const outputGrid = document.getElementById('output_grid');
+    const summaryDiv = document.getElementById('summary');
+    const errorDiv = document.getElementById('error');
+
+    // Show/hide mixture inputs based on mode
+    function updateModeUI(){
+      if(modeMixture.checked){
+        mixtureWrap.style.display = 'block';
+        singleKadarWrap.style.display = 'none';
+      } else {
+        mixtureWrap.style.display = 'none';
+        singleKadarWrap.style.display = 'block';
+      }
+      clearResults();
+    }
+
+    modeSingle.addEventListener('change', updateModeUI);
+    modeMixture.addEventListener('change', updateModeUI);
+
+    // Calculate total percentage for mixture
+    function calcTotalPct(){
+      const vals = [pctSn,pctMon,pctIlm,pctZir,pctRut,pctRre].map(i => parseFloat(i.value) || 0);
+      const total = vals.reduce((a,b)=>a+b,0);
+      totalPctDisplay.textContent = total.toFixed(4) + ' %';
+      return total;
+    }
+
+    [pctSn,pctMon,pctIlm,pctZir,pctRut,pctRre].forEach(el => el.addEventListener('input', calcTotalPct));
+
+    function clearResults(){
+      hasilDiv.style.display = 'none';
+      outputGrid.innerHTML = '';
+      summaryDiv.innerHTML = '';
+      errorDiv.style.display = 'none';
+      errorDiv.innerHTML = '';
+    }
+
+    function showError(msg){
+      errorDiv.style.display = 'block';
+      errorDiv.innerHTML = '<div class="danger">⚠️ ' + msg + '</div>';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function formatKg(val){ return Number(val).toLocaleString('en-US', {minimumFractionDigits:3, maximumFractionDigits:6}) + ' kg'; }
+    function formatGram(val){ return Number(val*1000).toLocaleString('en-US', {minimumFractionDigits:3, maximumFractionDigits:3}) + ' g'; }
+
+    hitungBtn.addEventListener('click',()=>{
+      clearResults();
+      // read inputs
+      const volumeMl = parseFloat(volumeInput.value);
+      if(!isFinite(volumeMl) || volumeMl <= 0){
+        showError('Masukkan volume (mL) yang valid dan > 0.');
+        return;
+      }
+
+      // total mass in kg = (volume_ml * densitas_g_per_ml) / 1000
+      const totalMassKg = (volumeMl * DENSITAS_G_PER_ML) / 1000.0;
+
+      if(modeSingle.checked){
+        const kadarSn = parseFloat(kadarSnInput.value);
+        if(!isFinite(kadarSn) || kadarSn < 0){
+          showError('Masukkan kadar timah (%) yang valid.');
+          return;
+        }
+        const beratSnKg = totalMassKg * (kadarSn / 100.0);
+
+        summaryDiv.innerHTML = `<strong>Mode:</strong> Single — hanya Timah<br><strong>Volume:</strong> ${volumeMl} mL → <strong>Total massa:</strong> ${formatKg(totalMassKg)} (${formatGram(totalMassKg)})`;
+
+        outputGrid.innerHTML = `
+          <div class="card small" style="padding:10px;">
+            <div><strong>Timah (Sn)</strong></div>
+            <div class="small">Kadar: ${kadarSn}%</div>
+            <div style="margin-top:8px;"><strong>${formatKg(beratSnKg)}</strong> — ${formatGram(beratSnKg)}</div>
+          </div>
+        `;
+        hasilDiv.style.display = 'block';
+        window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+        return;
+      }
+
+      // mixture mode
+      const vals = {
+        Sn: parseFloat(pctSn.value) || 0,
+        Monazite: parseFloat(pctMon.value) || 0,
+        Ilmenite: parseFloat(pctIlm.value) || 0,
+        Zircon: parseFloat(pctZir.value) || 0,
+        Rutile: parseFloat(pctRut.value) || 0,
+        RRE: parseFloat(pctRre.value) || 0
+      };
+      const totalPct = Object.values(vals).reduce((a,b)=>a+b,0);
+      calcTotalPct(); // update display
+
+      if(totalPct <= 0){
+        showError('Masukkan minimal satu persentase mineral (total > 0).');
+        return;
+      }
+      if(totalPct > 100.0001){
+        // still allow but warn
+        showError('Total persentase lebih dari 100%. Periksa nilai input. Sistem masih akan menghitung menggunakan nilai yang dimasukkan.');
+      }
+
+      summaryDiv.innerHTML = `<strong>Mode:</strong> Mixture — menghitung setiap mineral<br><strong>Volume:</strong> ${volumeMl} mL → <strong>Total massa:</strong> ${formatKg(totalMassKg)} (${formatGram(totalMassKg)})<br><strong>Total % yang dimasukkan:</strong> ${totalPct.toFixed(4)} %`;
+
+      // compute weights for each mineral
+      outputGrid.innerHTML = '';
+      for(const [name, pct] of Object.entries(vals)){
+        const wkg = totalMassKg * (pct / 100.0);
+        const card = document.createElement('div');
+        card.className = 'card small';
+        card.style.padding = '10px';
+        card.innerHTML = `<div><strong>${name}</strong></div>
+                          <div class="small">Kadar: ${pct}%</div>
+                          <div style="margin-top:8px;"><strong>${formatKg(wkg)}</strong> — ${formatGram(wkg)}</div>`;
+        outputGrid.appendChild(card);
+      }
+
+      // also show "other mass" if total pct < 100
+      if(totalPct < 100 - 1e-9){
+        const otherPct = 100 - totalPct;
+        const otherKg = totalMassKg * (otherPct/100.0);
+        const card = document.createElement('div');
+        card.className = 'card small';
+        card.style.padding = '10px';
+        card.innerHTML = `<div><strong>Other / Matrix</strong></div>
+                          <div class="small">Sisa persen: ${otherPct.toFixed(4)}%</div>
+                          <div style="margin-top:8px;"><strong>${formatKg(otherKg)}</strong> — ${formatGram(otherKg)}</div>`;
+        outputGrid.appendChild(card);
+      }
+
+      hasilDiv.style.display = 'block';
+      window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+    });
+
+    resetBtn.addEventListener('click',()=>{
+      volumeInput.value = 500;
+      kadarSnInput.value = 0.4;
+      pctSn.value = 0.4;
+      pctMon.value = 1;
+      pctIlm.value = 0.1;
+      pctZir.value = 2;
+      pctRut.value = 5;
+      pctRre.value = 0;
+      calcTotalPct();
+      clearResults();
+    });
+
+    // initial calc pct
+    calcTotalPct();
+
+    // Download the HTML file (self) so user can save local copy or reupload
+    downloadBtn.addEventListener('click', ()=>{
+      const html = `<!doctype html>\n` + document.documentElement.outerHTML;
+      const blob = new Blob([html], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kalkulator_timah.html';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // improve UX: update UI on load
+    updateModeUI();
+
+  </script>
+</body>
+</html>
